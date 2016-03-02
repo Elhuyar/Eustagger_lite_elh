@@ -8,7 +8,7 @@ https://github.com/ixa-ehu/eustagger
 
 Differences of Eustagger_elh with the original version:
 
-- Eustagger_elh is faster because some improvements made in the morfosintactic analysis step. Due to those changes the has a higher memory usage.
+- Eustagger_elh is faster because some improvements made in the morphosyntactic analysis step. Due to those changes it has a higher memory usage.
 - Eustagger_elh has the option of running in server mode using -p parameter, an example client is provided: eustagger_client.pl 
 - Eustagger_elh only has conll output format. Because it was forked from an older version, there is no NAF output. 
 
