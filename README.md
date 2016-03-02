@@ -1,4 +1,6 @@
-# Eustagger_Elh
+ Eustagger_Elh
+===============
+
 Elhuyar version of eustagger_lite lemmatizer/tagger for Basque, with speed performance improvements and server functionality added.
 
 You can find the original version developed by the IXA NLP group of the University of the Basque Contry at:
@@ -14,19 +16,22 @@ Differences of Eustagger_elh with the original version:
 
 
 How to install Eustagger_elh:
+-------------------------------
 
 Follow the instructions in IRAKURRI (Basque) or INSTRUCCIONES (Spanish) files.
 
 How to use Eustagger_elh:
+----------------------------
 
 Upon installation run eustagger_lite executable:
 
-'''
+````shell
 eustagger_lite proba.txt > proba.txt.tagged
-'''
+````
 
 
-Contact: 
+ Contact: 
+===========
 
 Xabier Saralegi and Iñaki San Vicente
 Elhuyar Foundation
