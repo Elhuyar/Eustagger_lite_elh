@@ -1,0 +1,132 @@
+# Hau erabiltzeko ingurune aldagaiak definitu behar dira
+#
+# Make egitean eman beharreko aukerak:
+# PROLOG=swi      -> Besterik ezeko balioa sicstus
+# FST=foma        -> Besterik ezeko balioa xerox
+# VARIANTS=bridge -> Besterik ezeko balioa, xeroxekin true, fomarekin bridge
+# Pendiente:
+# HABIL erabili
+#
+# Emaitza: eustagger
+#
+#
+#
+
+FST = foma
+VARIANTS = BRIDGE
+PROLOG = swi
+
+LIBRARY = libeustagger.so
+
+#install prefix
+INSTALL_DIR = @prefix@
+
+#pcre++
+INCLUDE_PCREPLUSPLUS = @CONF_INCLUDE_PCREPLUSPLUS@
+LD_PCREPLUSPLUS = -lpcre++
+
+#foma
+INCLUDE_FOMA = @CONF_INCLUDE_FOMA@
+LD_FOMA = -lfoma
+
+#vislcg3
+DEFINE_CG3 = -DHAVE_BOOST
+INCLUDE_CG3 = @CONF_INCLUDE_VISLCG3@
+LD_CG3 = -lcg3 -licuuc -licuio -lboost_system
+
+#swi prolog
+INCLUDE_SWIPL = @CONF_INCLUDE_SWIPL@
+LD_SWIPL = -lswipl
+SWIPLLD_BINDIR = @CONF_SWIPLLD@
+export PATH := $(SWIPLLD_BINDIR):$(PATH)
+
+#freeling
+INCLUDE_FREELING = @CONF_INCLUDE_FREELING@
+LD_FREELING = -lfreeling
+
+
+# morfologia
+DEFINE_MORFOLOGIA = -D_BOOL_H_ -DNLS_ERRORS -D_USE_FOMA_ -D__BRIDGE_VARIANTS__
+
+# morfosintaxia
+DEFINE_MORFOSINTAXIA = -D_REENTRANT -D__SWI_PROLOG__ -D__SWI_EMBEDDED__ -D_USE_SWI_
+
+# include local
+INCLUDE_LOCAL = $(DIRS:%=-I./%)
+
+SOURCE= eustagger_lite.cc
+SOURCE_MORFOSINTAXIA= morfosintaxia_raw/morfosintaxia_raw.cc
+
+BINPROGRAM=$(SOURCE:%.cc=%)
+BINPROGRAM_MORFOSINTAXIA=morfosintaxia_raw_swi
+
+DIRS = aurreprozesua_raw morfologia morfosintaxia_raw habil cg3manager analisitresnak
+
+MEMBERS=$(DIRS:%=%/*.o)
+
+
+# konf orokorrak:
+
+DEFINE=  $(DEFINE_MORFOLOGIA) $(DEFINE_MORFOSINTAXIA) $(DEFINE_CG3)
+INCLUDE= @CPPFLAGS@ $(INCLUDE_LOCAL) $(INCLUDE_FREELING)
+LDLIBS = @LDFLAGS@ $(LD_PCREPLUSPLUS) $(LD_FOMA) $(LD_CG3) $(LD_SWIPL) $(LD_FREELING)
+CCC= @CXX@
+CCFLAGS= -Wall -frtti -fPIC -g
+#CCFLAGS= -Wall -frtti -fPIC -O2
+CPPFLAGS= $(DEFINE)  
+
+
+LINK.cc = swipl-ld -fpic -goal true -D_USE_SWI_ $(CPPFLAGS) -o $(BINPROGRAM) $(SOURCE) $(INCLUDE) -L./ -leustagger $(LDLIBS) var/morfosintaxia/prolog-swi/chart_parser_2004_morf.pl var/morfosintaxia/prolog-swi/morfosintaxia_gramatika_441.pl
+LINK_MORFOS.cc = swipl-ld -fpic -goal true -D_USE_SWI_ $(CPPFLAGS) -o $(BINPROGRAM_MORFOSINTAXIA) $(SOURCE_MORFOSINTAXIA) $(INCLUDE) -L./ -leustagger $(LDLIBS) var/morfosintaxia/prolog-swi/chart_parser_2004_morf.pl var/morfosintaxia/prolog-swi/morfosintaxia_gramatika_441.pl
+
+.PHONY: $(DIRS) clean
+
+all: $(DIRS) $(LIBRARY) $(BINPROGRAM) $(BINPROGRAM_MORFOSINTAXIA)
+
+$(DIRS):
+	$(MAKE) -C $@
+
+$(BINPROGRAM): $(LIBRARY)
+	$(LINK.cc)
+
+$(BINPROGRAM_MORFOSINTAXIA): $(DIRS)
+	$(LINK_MORFOS.cc)
+
+$(LIBRARY): $(DIRS)
+	$(CCC) -o $(LIBRARY) $(INCLUDE) $(LDLIBS) -shared $(MEMBERS)
+
+clean: FORCE
+	'rm' -f $(BINPROGRAM) $(BINPROGRAM_MORFOSINTAXIA) $(LIBRARY)
+	@for dir in $(DIRS); do \
+	(cd $$dir; $(MAKE) clean); \
+	done
+
+install: FORCE
+	install -d -m 755 $(INSTALL_DIR)/bin
+	install -d -m 755 $(INSTALL_DIR)/lib
+	install -d -m 755 $(INSTALL_DIR)/tmp
+	install -m 755 $(BINPROGRAM) $(INSTALL_DIR)/bin
+	install -m 755 $(BINPROGRAM_MORFOSINTAXIA) $(INSTALL_DIR)/bin
+	install -m 755 $(LIBRARY) $(INSTALL_DIR)/lib
+	install -d -m 755 $(INSTALL_DIR)/var
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/aurreprozesua
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/habil
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/mg
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/morfologia
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/morfosintaxia
+	install -d -m 755 $(INSTALL_DIR)/var/eustagger_lite/morfosintaxia/prolog-swi
+	install -m 644 var/aurreprozesua/aurrean_lex.auto $(INSTALL_DIR)/var/eustagger_lite/aurreprozesua
+	install -m 644 var/habil/HAT_seguruak.dat $(INSTALL_DIR)/var/eustagger_lite/habil
+	install -m 644 var/mg/*.dat $(INSTALL_DIR)/var/eustagger_lite/mg
+	install -m 644 var/morfologia/*.dat $(INSTALL_DIR)/var/eustagger_lite/morfologia
+	install -m 644 var/morfologia/*.4.4.9 $(INSTALL_DIR)/var/eustagger_lite/morfologia
+	install -m 644 var/morfosintaxia/*.4.4.1 $(INSTALL_DIR)/var/eustagger_lite/morfosintaxia
+	install -m 644 var/morfosintaxia/prolog-swi/*.pl $(INSTALL_DIR)/var/eustagger_lite/morfosintaxia/prolog-swi
+	sed -i '2 c $(INSTALL_DIR)/var/eustagger_lite/mg/tagset.dat' $(INSTALL_DIR)/var/eustagger_lite/mg/eustaggerhmmf.dat
+	sed -i '2 c $(INSTALL_DIR)/var/eustagger_lite/mg/tagset.dat' $(INSTALL_DIR)/var/eustagger_lite/mg/probabilitateak.dat
+	@(echo "")
+	@(echo "WARNING: To run eustagger_lite you must set IXA_PREFIX environment var to $(INSTALL_DIR)")
+
+FORCE:
+

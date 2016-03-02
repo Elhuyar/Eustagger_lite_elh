@@ -1,0 +1,182 @@
+EUSTAGGER LITE INSTALATZEKO
+===========================
+
+Eustagger Lite linux sistema ezberdinetan probatu dugu, batzuk zaharragoak 
+(RHEL/Centos 6), beste batzuk berriagoak (Ubuntu 13.10). Jarraian dauden
+azalpenak Ubuntu 12.04-13.10 eta Fedora 18-20 bertsioekin funtzionatu beharko
+lukete.
+
+Eustagger Lite programak dependentzia hauek ditu:
+
+pcre++ (0.9.5 bertsioarekin probatuta)
+vislcg 3 (20130826 bertsioarekin probatuta)
+SWI Prolog (5.10.5 eta 6.0 bertsioekin probatuta)
+Foma (0.9.17 bertsioarekin probatuta)
+Freeling (3.1 bertsioarekin probatuta)
+Boost (1.53 bertsioarekin probatuta)
+
+Aldi berean programa/liburutegi horiek beraien dependentziak dituzte. Batzuk 
+linux banaketaren pakete ofizialak jarriz instalatu ahal izango dira:
+
+Ubuntu:
+=======
+
+        $ apt-get install subversion make cmake cpp libicu48 libicu-dev\
+          autoconf bison flex swi-prolog zlib1g zlib1g-dev libpcre3 libpcre3-dev\
+          libpcre++0 libpcre++-dev libboost-all-dev
+
+Fedora:
+=======
+
+        $ yum install subversion make cmake gcc-c++ libicu libicu-devel\
+          autoconf bison flex pl pl-devel zlib zlib-devel pcre pcre-devel\
+          boost boost-devel
+
+
+Fedoran pcre++ eskuz instalatu behar da. Horretarako 
+
+        $ wget http://www.daemon.de/idisk/Apps/pcre++/pcre++-0.9.5.tar.gz
+        edo bestela gure webgunetik:
+        $ wget http://ixa2.si.ehu.es/eustagger/pcre++-0.9.5.tar.gz
+
+
+        Deskonprimitu eta nahi duzun prefix-ean instalatu:
+
+        $ tar -zxvf pcre++-0.9.5.tar.gz
+        $ cd pcre++-0.9.5
+        $ ./configure (64 bit-eko sistema batzuetan --with-pcre-lib=/usr/lib64 erabili)
+        $ make
+        $ make install
+
+(lehenetsitako instalazio prefix-a /usr/local da, aldatzeko ./configure --prefix=path)
+
+
+ESKUZ INSTALATU BEHARREKOAK:
+
+foma:
+=====
+
+Deskargatu:
+
+        $ wget https://foma.googlecode.com/files/foma-0.9.17.tar.gz
+        edo bestela gure webgunetik:
+        $ wget http://ixa2.si.ehu.es/eustagger/foma-0.9.17.tar.gz
+
+
+Deskonprimitu, konpilatu eta instalatu:
+
+        $ tar -zxvf foma-0.9.17.tar.gz
+        $ cd foma-0.9.17
+        $ make
+        $ make install
+
+(lehenetsitako instalazio prefix-a /usr/local da, aldatzeko editatu Makefile fitxategia)
+
+vislcg3:
+========
+
+Deskargatu:
+
+        $ wget http://beta.visl.sdu.dk/download/vislcg3/vislcg3-20130826.tar.gz
+        edo bestela gure webgunetik:
+        $ wget http://ixa2.si.ehu.es/eustagger/vislcg3-20130826.tar.gz
+
+Deskonprimitu, konpilatu eta instalatu (cmake erabiltzen da):
+
+        $ tar -zxvf vislcg3-20130826.tar.gz
+        $ cd vislcg3-20130826
+        $ ./cmake.sh
+        $ make -j3
+        $ make install
+
+*.h eta *.hpp fitxategiak eskuz kopiatu behar dira erabakitako prefix-era:
+
+        $ cp src/*.h src/*.hpp /gure_prefix_include (adib. /usr/local/include)
+
+(prefix-a aldatzeko cmake.sh-ri  -DCMAKE_INSTALL_PREFIX=/path parametroa pasatzea dago)
+(boost liburutegia topatuko ez balu export BOOST_ROOT=/boost_kokapena)
+
+Freeling 3.1
+============
+
+Programa Freeling 3.1rekin probatu dugu (3.0 bertsioak ez du balio).
+
+http://devel.cpl.upc.edu/freeling/downloads/32 helbidetik deskargatu freeling-3.1.tar.gz
+paketea. Edo bestela gure webgunetik deskargatu:
+
+         $ wget http://ixa2.si.ehu.es/eustagger/freeling-3.1.tar.gz
+
+
+Deskonprimitu, konpilatu eta instalatu:
+
+        $ tar -zxvf freeling-3.1.tar.gz
+        $ cd freeling-3.1
+        ( Fedora/RedHat sistemetan hau egin behar da: $ export LDFLAGS=-lboost_system )
+        $ ./configure --disable-warnings
+        $ make
+        $ make install
+
+* Linux banaketarena ez den Boost instalazio jakin bat erabili nahi izanez gero,
+configure egikaritu baino lehen hau egin:
+
+$ export LDFLAGS="-L/nire_boost_instalazioa/lib -lboost_system"
+$ export CPPFLAGS="-I/nire_boost_instalazioa/include"
+
+
+* Freeling 3.1 konpilatzean honako errore hau eman dezake:
+
+../../src/include/freeling/morfo/foma_FSM.h:1: error: stray '\357' in program
+../../src/include/freeling/morfo/foma_FSM.h:1: error: stray '\273' in program
+../../src/include/freeling/morfo/foma_FSM.h:1: error: stray '\277' in program
+
+Hori ekiditzeko src/include/freeling/morfo/foma_FSM.h fitxategia editatu
+eta hasierako komentario lerroak ezabatu.
+
+
+eustagger: 
+==========
+
+Eskuratu eustagger:
+
+        $ svn co https://siuc05.si.ehu.es/svn/eustagger/trunk/eustagger
+        edo bestela:
+        $ wget http://ixa2.si.ehu.es/eustagger/eustagger_latest.tar.bz2
+
+Konpilatu eta instalatzeko (goiko dependentziak ):
+
+        $ cd eustagger
+        $ autoconf
+        $ ./configure
+
+	Sistema eragileko swipl erabiltzen bada seguraski swipl-ren fitxategiak
+	non dauden adierazi behar zaio 	"--with-swipl-include="  eta "--with-lib-include="
+	parametroak erabiliz. Adibidez Ubuntun "--with-swipl-include=/usr/lib/swi-prolog/include"
+	gehitu behar da...
+	
+	$ make
+	$ make install
+
+Lehenetsitako instalazio prefix-a /usr/local da. Aldatzeko --prefix aukera
+erabili ./configure egikaritzean. Liburutegiren bat topatuko ez balu configure-ri
+badago esatea non dagoen. Aukera guztiak ikusteko './configure --help'.
+
+Badirudi linux banaketa bakoitzak swipl header-ak nahi duen lekuan instalatzen
+dituela. Adibidez ubuntun  --with-swipl-include=/usr/lib/swi-prolog/include erabili
+behar da header-ak topatzeko.
+
+
+Azkenik, eustagger probatzeko ingurunean aldaketa hauek egin:
+
+	$ export IXA_PREFIX=gure_prefix (/usr/local?)
+	$ export LD_LIBRARY_PATH=gure_prefix/lib:$LD_LIBRARY_PATH
+
+eustagger egikaritzeko prest gaude:
+
+	$ eustagger_lite sarrera_fitx.txt
+
+eustagger zerbitzu moduan botatzeko:
+
+	$ eustagger_lite -p [portua]
+
+eustagger bezeroa:
+	$ eustagger_lite_client.pl [portua] [fitxategiaren_bide_osoa]
