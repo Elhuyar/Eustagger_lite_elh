@@ -100,7 +100,7 @@ void help() {
     cerr << "-h laguntza hau" << endl;
     cerr << "-s HAUL seguruak prozesatu (defektuz ez)" << endl;
     cerr << "-p [portua] socket-ek erabili behar duten portua" << endl;
-    cerr << "-a [1|2|3] zenbat aurre analisi kargatu (defektuz ez) 1->187.535 analisi, 2->426.435 analisi, 3->928.728 analisi"<< endl;
+    cerr << "-a [1|2|3] zenbat aurre analisi kargatu (defektuz 1) 1->187.535 analisi, 2->426.435 analisi, 3->928.728 analisi"<< endl;
     cerr << "-d [lex fitxategia] erabiltzailearen hiztegia (defektuz ez)" << endl;
     cerr << "-m [0|1|2|3|4] (defektuz 2)" << endl;
     cerr << "-m 0 denean ez du desanbiguatuko" << endl;  
@@ -234,8 +234,8 @@ int main(int argc, char *argv[]){
   int deslokala = 1;
   int parentizatua = 1;
   int emaitzik = 0;
-  int analisi_ezagunak = 0;
-  int analisi_kopurua = 10;
+  int analisi_ezagunak = 1;
+  int analisi_kopurua = 1;
   bool haul_seguruak = false;
   char c;
   vector<string> emaitza;
