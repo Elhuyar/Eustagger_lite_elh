@@ -290,6 +290,9 @@ void MorfosRaw::writeResult() {
     exit(EXIT_FAILURE);
   }
   res << morfDocStream.str();
+  //.morf sortzeko
+  // cout << morfDocStream.str()  <<endl;
+
   res.close();
 }
 

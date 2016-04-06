@@ -100,7 +100,7 @@ void help() {
     cerr << "-h laguntza hau" << endl;
     cerr << "-s HAUL seguruak prozesatu (defektuz ez)" << endl;
     cerr << "-p [portua] socket-ek erabili behar duten portua" << endl;
-    cerr << "-a [1|2|3] zenbat aurre analisi kargatu (defektuz 1) 1->187.535 analisi, 2->426.435 analisi, 3->928.728 analisi"<< endl;
+    cerr << "-a [1|2] hizt maizenen analisiak aurrekargatu (defektuz 1) 1->lehenengo 45.452 hitzenak, 2->lehenengo 102.919 hitzenak"<< endl;
     cerr << "-d [lex fitxategia] erabiltzailearen hiztegia (defektuz ez)" << endl;
     cerr << "-m [0|1|2|3|4] (defektuz 2)" << endl;
     cerr << "-m 0 denean ez du desanbiguatuko" << endl;  
@@ -264,6 +264,9 @@ int main(int argc, char *argv[]){
     }
   }
   
+
+
+
 #ifdef _USE_SWI_
   PlEngine e(argv[0]);
 #endif
@@ -308,6 +311,7 @@ int main(int argc, char *argv[]){
     fitxategiIzena = argv[optind];
     erantzuna = "";
     emaitza = segmentazioaSortuRawBat(fitxategiIzena);
+
     if (analisi_ezagunak){
       emaitzaFiltratua = filtratuEzagunak(emaitza,analisi_mapa);
     }

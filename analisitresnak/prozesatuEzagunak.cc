@@ -110,7 +110,7 @@ void konbinatuFiltratuak(string &fitxategiIzena,vector<string> &emaitzaFiltratua
         }
         if (infile.is_open()){
             infile.close();
-            remove(filSarrera.c_str());
+	    remove(filSarrera.c_str());
         }
         outfile.close();
         rename(filIrteera.c_str(),filSarrera.c_str());
