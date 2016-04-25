@@ -1,0 +1,1 @@
+g++ -D_USE_FOMA_ -I./morfologia morfologia/*.o /usr/lib/libpcre++.so -lfoma anali.cc
