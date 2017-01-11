@@ -198,7 +198,7 @@ int WaitClient() {
   if (pid!=0) {
     // we are the parent. Close client socket and wait for next client
     sock->set_parent();
-    wcerr<<L"SERVER.DISPATCHER: Connection established. Forked worker "<<pid<<"."<<endl;
+    //wcerr<<L"SERVER.DISPATCHER: Connection established. Forked worker "<<pid<<"."<<endl;
   }
   else { 
     // we are the child. Close request socket and prepare to get data from client.
@@ -287,6 +287,11 @@ int main(int argc, char *argv[]){
       if (n!=0) continue;
       ReadLine(fitxategiIzena);
       
+      //      cout <<"------------------------------------------------------------------SARRERA:" <<endl;
+      //      cout <<"-------------------------------------------------------------------" <<endl;
+      //      cout << fitxategiIzena  << endl;
+      //      cout <<"------" <<endl;
+
       erantzuna = "";
       emaitza = segmentazioaSortuRawBat(fitxategiIzena);
       if (analisi_ezagunak){
@@ -303,6 +308,12 @@ int main(int argc, char *argv[]){
       if (emaitzik > 0){
 	erantzuna = prozesatuCG3Raw(maila,fitxategiIzena) ;
       }
+      
+      //cout <<"--------------------------------------------------------------->IRTERA:" <<endl;
+      //      cout <<"------" <<endl;
+      //      cout <<erantzuna<< endl;    
+      //      cout <<"------" <<endl;
+      
       sock->write_message(erantzuna);
       CloseWorker();
     }

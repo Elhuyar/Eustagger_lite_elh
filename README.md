@@ -25,6 +25,8 @@ How to use Eustagger_elh:
 
 Upon installation run eustagger_lite executable:
 
+proba.txt in utf8
+
 ````shell
 eustagger_lite proba.txt > proba.txt.tagged
 ````
