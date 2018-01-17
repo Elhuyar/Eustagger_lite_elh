@@ -44,20 +44,21 @@ using namespace std;
 using namespace pcrepp;
 using namespace freeling;
 
-
 string getEnvVar(string const& key);
 string kendu_cg3rako_etiketak(string info);
 string PrintResults (list < sentence > &ls, int level);
-string desHMM(int maila, string &desIrteera, string &oinIzen);
+string desHMM(int maila, string &desIrteera, string &oinIzen,hmm_tagger &taggerEu, probabilities &probs);
+long long timeval_diff(struct timeval *difference,struct timeval *end_time,struct timeval *start_time);
 
 
-string prozesatuCG3Raw(int maila, string &oinIzen) {
+string prozesatuCG3Raw(int maila, string &oinIzen, hmm_tagger &taggerEu, probabilities &probs){
     string tmpVar = getEnvVar("IXA_PREFIX");
     string tmpName;
     string gramatika;
     string desSarrera = oinIzen + PHAT;
     string desIrteera = oinIzen ;
     string results = "";
+ 
     if (maila != 0) {
         if (tmpVar.length()>0) {
             tmpVar += "/var/eustagger_lite/mg/";
@@ -79,24 +80,29 @@ string prozesatuCG3Raw(int maila, string &oinIzen) {
             cerr << "Error in initGrammar: "<<gramatika << endl;
             return "";
         }
+
         if (cgApp.initIO(desSarrera,desIrteera) == 0) {
             cerr << "Error in initIO " << desSarrera << " or " << desIrteera<< endl;
             return "";
         }
+
         cgApp.applyGrammar();// aplikatu sekzio eta mapaketa guztiak
         cgApp.clean();
-        unlink(desSarrera.c_str());
-        results = results + desHMM(maila,desIrteera,oinIzen);
+	unlink(desSarrera.c_str());
+	results = results + desHMM(maila,desIrteera,oinIzen,taggerEu,probs);
         unlink(desIrteera.c_str());
     }
     else {
-        results = results + desHMM(maila,desSarrera,oinIzen);
-        unlink(desSarrera.c_str());
+      results = results + desHMM(maila,desSarrera,oinIzen,taggerEu,probs);
+      unlink(desSarrera.c_str());
     }
+    
     return results;
 }
 
-string desHMM(int maila, string &desIrteera,string &oinIzen) {
+
+string desHMM(int maila, string &desIrteera,string &oinIzen,hmm_tagger &taggerEu, probabilities &probs) {
+
     euParole parolera(maila);
     list<sentence> ls;
     sentence lws;
@@ -105,25 +111,15 @@ string desHMM(int maila, string &desIrteera,string &oinIzen) {
     string tmpVar = getEnvVar("IXA_PREFIX");
     string tmpName;
     string results = "";
-    if (tmpVar.length()>0) {
-        tmpVar += "/var/eustagger_lite/mg/";
-        tmpName = tmpVar + "eustaggerhmmf.dat";
-    }
-    else {
-        cerr << "prozesatuCG3Raw => ERRORE LARRIA: 'IXA_PREFIX' ingurune aldagaia ezin daiteke atzitu" << endl;
-        exit(EXIT_FAILURE);
-    }
-    wstring tagDat = util::string2wstring(tmpName);
-    hmm_tagger taggerEu(tagDat, false, FORCE_TAGGER,1);
-    tmpName = tmpVar + "probabilitateak.dat";
-    wstring probDat = util::string2wstring(tmpName);
-    probabilities probs(probDat,0.001);
     stringstream irt;
+
     if (!in) {
         exit(EXIT_FAILURE);
     }
     getline(in,sars);
+
     while (sars.length()>0) {
+      
         string formL;
         wstring form,lemma,tag,ambclass;
         Pcre firstL("\\\"<\\$?(.[^>]*)>\\\"");
@@ -185,6 +181,7 @@ string desHMM(int maila, string &desIrteera,string &oinIzen) {
     return results;
 }
 string PrintResults (list < sentence > &ls, int level) {
+
     sentence::const_iterator w;
     list < sentence >::iterator si;
     wstring lemma;
@@ -192,7 +189,9 @@ string PrintResults (list < sentence > &ls, int level) {
     wstring tag;
     string results;
     results = "";
+    
     for (si = ls.begin (); si != ls.end (); si++) {
+
       for (w = si->begin (); w != si->end (); w++) {		
 	forma=w->get_form ();
 	results = results + string(forma.begin(), forma.end())+" ";	

@@ -58,6 +58,10 @@ string prozesatuCG3Raw(int maila, string &oinIzen) {
     string desSarrera = oinIzen + PHAT;
     string desIrteera = oinIzen ;
     string results = "";
+
+
+    cout <<  "KAKAKAKA" <<endl;
+
     if (maila != 0) {
         if (tmpVar.length()>0) {
             tmpVar += "/var/eustagger_lite/mg/";
@@ -124,6 +128,9 @@ string desHMM(int maila, string &desIrteera,string &oinIzen) {
     }
     getline(in,sars);
     while (sars.length()>0) {
+
+      cout <<  sars <<endl;
+      
         string formL;
         wstring form,lemma,tag,ambclass;
         Pcre firstL("\\\"<\\$?(.[^>]*)>\\\"");

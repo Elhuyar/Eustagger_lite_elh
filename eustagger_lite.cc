@@ -1,5 +1,4 @@
 //////////////////////////////////////////////////////////////////
-//
 //  EUSTAGGER LITE
 //
 //  Copyright (C) 1996-2013  IXA Taldea
@@ -26,7 +25,8 @@
 //
 //////////////////////////////////////////////////////////////////
 
-
+#include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <iostream>
@@ -39,8 +39,20 @@
 
 #include "dat_orok.h"
 #include "constants_decl.h"
-
 #include "formatua.h"
+
+
+#include "ald_orok.h"
+#include "freeling.h"
+#include "freeling/morfo/util.h"
+#include <pcre++.h>
+
+#include "cgmanager.h"
+#include "euparole.h"
+
+using namespace std;
+using namespace pcrepp;
+using namespace freeling;
 
 #ifdef _USE_SWI_
 #include "SWI-cpp.h"
@@ -48,7 +60,7 @@
 
 // socket gehigarria
 // Default server parameters
-#define DEFAULT_MAX_WORKERS 16   // maximum number of workers simultaneously active.
+#define DEFAULT_MAX_WORKERS 15   // maximum number of workers simultaneously active.
 #define DEFAULT_QUEUE_SIZE 500   // maximum number of waiting clients
 
 #include "fsocket.h"
@@ -62,7 +74,7 @@ static map<string,string> analisi_mapa;
 
 // socket gehigarria
 sem_t semaf;
-socket_CS *sock; 
+socket_CS *sock;
 
 std::string getEnvVar(std::string const& key);
 
@@ -74,7 +86,7 @@ extern vector<string> filtratuEzagunak(vector<string> &emaitza,map<string,string
 extern void segmentazioaSortuRawBi(string &fitxategiIzena, string &segIrteera,vector<string> &emaitza);
 extern void morfosintaxiaSortuRaw(string &fitxategiIzena, string &segIrteera, bool haul_seguruak, bool cg3form);
 extern void konbinatuFiltratuak(string &fitxategiIzena,vector<string> &emaitzaFiltratua,map<string,string> &analisi_mapa);
-extern string prozesatuCG3Raw(int maila, string &oinIzen);
+extern string prozesatuCG3Raw(int maila, string &oinIzen, hmm_tagger &taggerEu, probabilities &probs);
 
 void help() {
     stringstream eustaggerVersion;
@@ -103,28 +115,29 @@ void help() {
     cerr << "-a [1|2] hizt maizenen analisiak aurrekargatu (defektuz 1) 1->lehenengo 45.452 hitzenak, 2->lehenengo 102.919 hitzenak"<< endl;
     cerr << "-d [lex fitxategia] erabiltzailearen hiztegia (defektuz ez)" << endl;
     cerr << "-m [0|1|2|3|4] (defektuz 2)" << endl;
-    cerr << "-m 0 denean ez du desanbiguatuko" << endl;  
+    cerr << "-m 0 denean ez du desanbiguatuko" << endl;
     cerr << "-m 4 denean bakarrik aplikatuko du CG3 desanbiguatzeko" << endl;
     cerr << eustaggerVersion.str() ;
     exit(EXIT_FAILURE);
 }
 
+
 map<string,string> initMap(int a_size) {
   ///  printf("\n\n## Analisiak irakurtzen... ##\n\n");
   map<string,string> a_map;
-  
+
   char* tmp = 0;
   char fitxIzena[200];
-  
+
   if ( (tmp = getenv("IXA_PREFIX")) != 0 ){
     strcpy( fitxIzena , tmp);
-  } 
-    
+  }
+
   strcat( fitxIzena, "/var/eustagger_lite/morfologia/" );
-  
+
   char filename[200];
-  sprintf(filename,"analisia_%d.dat",a_size);  
-  strcat( fitxIzena, filename );    
+  sprintf(filename,"analisia_%d.dat",a_size);
+  strcat( fitxIzena, filename );
   ifstream infile(fitxIzena);
   string line;
   string map_index = "";
@@ -134,16 +147,16 @@ map<string,string> initMap(int a_size) {
 
     if (line != ""){
       if (line.substr(0,2) == "\"<"){
-	map_index = line;
-	replace(map_index.begin(), map_index.end(), '\"', '/');
-	ocurrences = count(map_index.begin(),map_index.end(),'/');
-	if (ocurrences < 3){
-	  map_index = map_index + "/";
-	}
-	a_map[map_index] = line;
+        map_index = line;
+        replace(map_index.begin(), map_index.end(), '\"', '/');
+        ocurrences = count(map_index.begin(),map_index.end(),'/');
+        if (ocurrences < 3){
+          map_index = map_index + "/";
+        }
+        a_map[map_index] = line;
       }
       else{
-	a_map[map_index] = a_map[map_index] + "\n" + line;
+        a_map[map_index] = a_map[map_index] + "\n" + line;
       }
     }
   }
@@ -154,32 +167,49 @@ map<string,string> initMap(int a_size) {
 
 // socket gehigarria
 //---- Capture signal informing that a child ended ---
-void child_ended(int n) {
+void child_ended() {
+  pid_t pid;
   int status;
-  wait(&status);  
-  sem_post(&semaf);
+  do {
+    pid = waitpid(-1, &status, WNOHANG);
+    if (pid > 0) {
+      sem_post(&semaf);
+    }
+  } while (pid > 0);
 }
 
 //----  Capture signal to shut server down cleanly
-void terminate (int param) {
+void shutdown() {
   wcerr<<L"SERVER.DISPATCHER: Signal received. Stopping"<<endl;
   exit(0);
+}
+
+//---- Capture any signal and redirect to the corresponding function
+void sig_handle_func(int signo, siginfo_t *siginfo, void *context) {
+  switch (signo) {
+  case SIGCHLD: child_ended(); break;
+  case SIGTERM: terminate(); break;
+  case SIGQUIT: terminate(); break;
+  }
 }
 
 //----  Initialize server socket, signals, etc.
 void InitServer(int port_number) {
   pid_t myPID=getpid();
   char host[256];
-  strcpy(host, "localhost"); 
-  
+  strcpy(host, "localhost");
+
   // open sockets to listen for clients
   sock = new socket_CS(port_number,DEFAULT_QUEUE_SIZE);
-  
-  // Capture terminating signals, to exit cleanly.
-  signal(SIGTERM,terminate); 
-  signal(SIGQUIT,terminate);   
-  // Be signaled when children finish, to keep count of active workers.
-  signal(SIGCHLD,child_ended); 
+
+  struct sigaction sig_handle;
+  memset (&sig_handle, '\0', sizeof(sig_handle));
+  sig_handle.sa_sigaction = &sig_handle_func;
+  sig_handle.sa_flags = SA_SIGINFO | SA_RESTART;
+
+  sigaction(SIGTERM, &sig_handle, NULL);
+  sigaction(SIGQUIT, &sig_handle, NULL);
+  sigaction(SIGCHLD, &sig_handle, NULL);
   // Init worker count sempahore
   sem_init(&semaf,0,DEFAULT_MAX_WORKERS);
 }
@@ -191,20 +221,20 @@ int WaitClient() {
   sem_wait(&semaf);
   wcerr<<L"SERVER.DISPATCHER: Waiting connections"<<endl;
   sock->wait_client();
-  
+
   pid = fork();
   if (pid < 0) wcerr<<L"ERROR on fork"<<endl;
-  
+
   if (pid!=0) {
     // we are the parent. Close client socket and wait for next client
     sock->set_parent();
     //wcerr<<L"SERVER.DISPATCHER: Connection established. Forked worker "<<pid<<"."<<endl;
   }
-  else { 
+  else {
     // we are the child. Close request socket and prepare to get data from client.
     sock->set_child();
   }
-  
+
   return pid;
 }
 
@@ -215,6 +245,7 @@ void CloseWorker(){
   exit(0);
 }
 
+
 /////// Functions to wrap I/O mode (server socket) ////////
 
 //---- Read a line from input channel
@@ -223,6 +254,7 @@ int ReadLine(string &text) {
   n = sock->read_message(text);
   return n;
 }
+
 
 int main(int argc, char *argv[]){
   int Sarrera_berezia = 1 ; /*** 99/9/2 -L aukerarako */
@@ -240,12 +272,15 @@ int main(int argc, char *argv[]){
   char c;
   vector<string> emaitza;
   vector<string> emaitzaFiltratua;
-  string lex_izena; 
+  string lex_izena;
   string fitxategiIzena;
   string segIrteera;
   string erantzuna;
   int portua = 0;
-  
+
+
+
+
   while ((c = getopt(argc, argv, "sShHP:p:A:a:M:m:D:d:")) != EOF) {
     switch (c) {
     case 'S':
@@ -262,15 +297,12 @@ int main(int argc, char *argv[]){
     case 'h':
     default: help();
     }
-  }
-  
-
-
+ }
 
 #ifdef _USE_SWI_
   PlEngine e(argv[0]);
 #endif
-  
+
   if (Sarrera_berezia) parentizatua = 1;
   edbl_bertsioa = 4;
   segHasieraketak(Sarrera_berezia,lexiko_uzei,bigarren_aukera,ez_estandarrak,lex_ald,lex_izena,parentizatua,deslokala);
@@ -279,50 +311,67 @@ int main(int argc, char *argv[]){
     if (analisi_kopurua > 100) analisi_kopurua = 100;
     analisi_mapa = initMap(analisi_kopurua);
   }
-  
+
+
+
+
+string tmpVar;
+string tmpName;
+tmpVar = getEnvVar("IXA_PREFIX");
+
+if (tmpVar.length()>0) {
+	tmpVar += "/var/eustagger_lite/mg/";
+	tmpName = tmpVar + "eustaggerhmmf.dat";
+}
+else {
+	cerr << "eustagger_lite main => ERRORE LARRIA: 'IXA_PREFIX' ingurune aldagaia ezin daiteke atzitu" << endl;
+	exit(EXIT_FAILURE);
+}
+
+
+wstring tagDat = util::string2wstring(tmpName);
+hmm_tagger taggerEu(tagDat, false, FORCE_TAGGER,1);
+tmpName = tmpVar + "probabilitateak.dat";
+wstring probDat = util::string2wstring(tmpName);
+probabilities probs(probDat,0.001); 
+
   if (portua > 0) {
     InitServer(portua);
     while (1) {
       int n=WaitClient();
       if (n!=0) continue;
       ReadLine(fitxategiIzena);
-      
-      //      cout <<"------------------------------------------------------------------SARRERA:" <<endl;
-      //      cout <<"-------------------------------------------------------------------" <<endl;
-      //      cout << fitxategiIzena  << endl;
-      //      cout <<"------" <<endl;
-
       erantzuna = "";
       emaitza = segmentazioaSortuRawBat(fitxategiIzena);
+
       if (analisi_ezagunak){
-	emaitzaFiltratua = filtratuEzagunak(emaitza,analisi_mapa);
+		
+        emaitzaFiltratua = filtratuEzagunak(emaitza,analisi_mapa);
+
       }
       emaitzik = emaitza.size() + emaitzaFiltratua.size();
       if (emaitza.size() > 0){
-	segmentazioaSortuRawBi(fitxategiIzena,segIrteera,emaitza);
-	morfosintaxiaSortuRaw(fitxategiIzena,segIrteera,haul_seguruak,OUT_MG);
+
+        segmentazioaSortuRawBi(fitxategiIzena,segIrteera,emaitza);
+        morfosintaxiaSortuRaw(fitxategiIzena,segIrteera,haul_seguruak,OUT_MG);
       }
       if (emaitzaFiltratua.size() > 0){
-	konbinatuFiltratuak(fitxategiIzena,emaitzaFiltratua,analisi_mapa);
+        konbinatuFiltratuak(fitxategiIzena,emaitzaFiltratua,analisi_mapa);
       }
       if (emaitzik > 0){
-	erantzuna = prozesatuCG3Raw(maila,fitxategiIzena) ;
+       erantzuna = prozesatuCG3Raw(maila,fitxategiIzena,taggerEu,probs);
       }
-      
-      //cout <<"--------------------------------------------------------------->IRTERA:" <<endl;
-      //      cout <<"------" <<endl;
-      //      cout <<erantzuna<< endl;    
-      //      cout <<"------" <<endl;
-      
+
       sock->write_message(erantzuna);
       CloseWorker();
     }
   }
-  else if (optind < argc) {
+ else if (optind < argc) {
+
     fitxategiIzena = argv[optind];
     erantzuna = "";
     emaitza = segmentazioaSortuRawBat(fitxategiIzena);
-
+    vector<string>::iterator it;
     if (analisi_ezagunak){
       emaitzaFiltratua = filtratuEzagunak(emaitza,analisi_mapa);
     }
@@ -335,9 +384,10 @@ int main(int argc, char *argv[]){
       konbinatuFiltratuak(fitxategiIzena,emaitzaFiltratua,analisi_mapa);
     }
     if (emaitzik > 0){
-      erantzuna = prozesatuCG3Raw(maila,fitxategiIzena) ;
-    }
+	erantzuna = prozesatuCG3Raw(maila,fitxategiIzena,taggerEu,probs);
+}
     cout <<  erantzuna <<endl;
-  }    
+
+  }
   segAmaierakoak();
 }

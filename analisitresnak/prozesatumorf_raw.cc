@@ -33,7 +33,6 @@
 #include <fstream>
 #include <string.h>
 #include <string>
-
 #include "morfosraw.h"
 
 using namespace std;
@@ -48,7 +47,6 @@ extern const char* SEG_FITX;
 
 char *testu_buffer;
 int buffer_size;
-
 
 void morfosintaxiaSortuRaw(string &oinIzen, string &segIrteera, bool haul_seguruak, bool cg3form) {
  // Definitu morfosintaxi exekutagarriaren izena ingurune aldagaien arabera
@@ -68,6 +66,7 @@ void morfosintaxiaSortuRaw(string &oinIzen, string &segIrteera, bool haul_seguru
 
   string segpIzen = oinIzen + ".segp";
   bool cg3zuz = cg3form;
+
   if (haul_seguruak) cg3zuz = false; // habil-ek ez du CG3 formatua jaten
   MorfosRaw morfosintaxia(execPath, oinIzen, 100, false,cg3zuz); // 1 beharrean 100 beharko luke
   morfosintaxia.sortuAnalisiak(segIrteera);
@@ -110,4 +109,3 @@ void morfosintaxiaSortuRaw(string &oinIzen, string &segIrteera, bool haul_seguru
   }
 
 }
-
