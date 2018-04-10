@@ -3,17 +3,17 @@ EUSTAGGER LITE INSTALATZEKO
 
 Eustagger Lite linux sistema ezberdinetan probatu dugu, batzuk zaharragoak 
 (RHEL/Centos 6), beste batzuk berriagoak (Ubuntu 13.10). Jarraian dauden
-azalpenak Ubuntu 12.04-13.10 eta Fedora 18-20 bertsioekin funtzionatu beharko
+azalpenak Ubuntu 12.04, 13.10, 14.04, 16.04 eta Fedora 18-20 bertsioekin funtzionatu beharko
 lukete.
 
 Eustagger Lite programak dependentzia hauek ditu:
 
 pcre++ (0.9.5 bertsioarekin probatuta)
 vislcg 3 (20130826 bertsioarekin probatuta)
-SWI Prolog (5.10.5 eta 6.0 bertsioekin probatuta)
-Foma (0.9.17 bertsioarekin probatuta)
+SWI Prolog (5.10.5 eta 6.6.6 bertsioekin probatuta)
+Foma (0.9.17 eta 0.9.18 bertsioekin probatuta)
 Freeling (3.1 bertsioarekin probatuta)
-Boost (1.53 bertsioarekin probatuta)
+Boost (1.53 - 1.58 bertsioekin probatuta)
 
 Aldi berean programa/liburutegi horiek beraien dependentziak dituzte. Batzuk 
 linux banaketaren pakete ofizialak jarriz instalatu ahal izango dira:
@@ -22,7 +22,7 @@ Ubuntu:
 =======
 
         $ apt-get install subversion make cmake cpp libicu48 libicu-dev\
-          autoconf bison flex swi-prolog zlib1g zlib1g-dev libpcre3 libpcre3-dev\
+          autoconf bison flex zlib1g zlib1g-dev libpcre3 libpcre3-dev\
           libpcre++0 libpcre++-dev libboost-all-dev
 
 Fedora:
@@ -94,7 +94,12 @@ Deskonprimitu, konpilatu eta instalatu (cmake erabiltzen da):
         $ cp src/*.h src/*.hpp /gure_prefix_include (adib. /usr/local/include)
 
 (prefix-a aldatzeko cmake.sh-ri  -DCMAKE_INSTALL_PREFIX=/path parametroa pasatzea dago)
+(tcmalloc ez erabiltzeko -DUSE_TCMALLOC:BOOL=false pasa  cmake.sh-ri - Arazoak ematen ditu ubuntu 16.04n)
 (boost liburutegia topatuko ez balu export BOOST_ROOT=/boost_kokapena)
+
+
+
+
 
 Freeling 3.1
 ============
@@ -131,6 +136,38 @@ $ export CPPFLAGS="-I/nire_boost_instalazioa/include"
 
 Hori ekiditzeko src/include/freeling/morfo/foma_FSM.h fitxategia editatu
 eta hasierako komentario lerroak ezabatu.
+
+swi-prolog:
+============
+
+ubuntu 14.04tik aurrera prolog-en 7.x.x bertsioak instalatzen dira apt bidez (sudo apt-get install swi-prolog), baina eustaggerrek 6.6.6 behar du gehienez. Horrenbestez, swipl-6.6.6 bertsioa deskargatu eta eskuz konpilatu beharko da:
+
+$ wget http://www.swi-prolog.org/download/stable/src/pl-6.6.6.tar.gz
+
+eta jarraitu hemengo argibideak: http://www.swi-prolog.org/build/ - argibide azkarrak:
+
+$ cd src/
+$ . /configure
+$ make
+$ sudo make install
+$ cd ../packages
+$ . /configure
+$ make
+$ sudo make install
+
+
+ARAZOAK 1: arazoak ematen baditu instalazioan zehar baliteke libxpm-dev eta libarchive-dev paketeak instalatu behar izatea. Ubuntun:
+    $ sudo apt-get install libxpm-dev libarchive-dev
+
+ARAZOAK 2: Arazorik balego jpl konpilatzean aurrera egin instalazioarekin, ez da beharrezkoa. Adib:
+    libjava.so not found
+    libverify.so not found
+    libjvm.so not found
+   
+    
+ARAZOAK 3: ./configure exekutatzean baliteke --enable-shared aktibatu behar izatea. adib:
+   $ ./configure --prefix=/usr/local/swipl-6.6.6/ --enable-shared
+
 
 
 eustagger: 
@@ -180,3 +217,22 @@ eustagger zerbitzu moduan botatzeko:
 
 eustagger bezeroa:
 	$ eustagger_lite_client.pl [portua] [fitxategiaren_bide_osoa]
+
+
+
+ARAZOAK 1:
+-----------
+Eustagger exekutatzean tcmalloc-ek errore hau eman dezake (ubuntu 16.04): 
+eustagger_lite ~/test1.txt 
+src/tcmalloc.cc:278] Attempt to free invalid pointer 0x8c94bd8 
+Aborted (core dumped)
+
+Arazo hau ematen badu, vislcg3-k erabiltzen duen libtcmalloc.so liburutegian dago arazoa. Konpontzeko 2 aukera daude:
+  1) ubuntun ezabatu libgoogle-perftools-dev paketea :
+     $sudo apt-get remove libgoogle-perftools-dev
+  2) vislcg3 berriz konpilatu cmake.sh-ri -DUSE_TCMALLOC:BOOL=false parametroa pasata (Ez dago testeatuta)
+
+ARAZOAK 2:
+-----------
+Eustagger exekutatzean liburutegiak ez baditu topatzen (libcg3.so edo libeustagger.so) esteka sinbolikoak sortu behar dira. Hau gerta daiteke vislcg3 eta eustagger /usr/local ez den beste direktorio batean instalatu direnean.
+
