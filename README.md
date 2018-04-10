@@ -5,7 +5,7 @@ Elhuyar version of eustagger_lite lemmatizer/tagger for Basque, with speed perfo
 
 You can find the original version developed by the IXA NLP group of the University of the Basque Contry at:
 
-https://github.com/ixa-ehu/eustagger
+https://github.com/ixa-ehu/eustagger-lite
 
 
 Differences of Eustagger_elh with the original version:
@@ -37,4 +37,4 @@ eustagger_lite proba.txt > proba.txt.tagged
 
 Xabier Saralegi and Iñaki San Vicente
 Elhuyar Foundation
-{x.saralegi,i.sanvicente}@elhuyar.com
+{x.saralegi,i.sanvicente}@elhuyar.eus
