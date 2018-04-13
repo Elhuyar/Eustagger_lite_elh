@@ -56,21 +56,38 @@ ESKUZ INSTALATU BEHARREKOAK:
 foma:
 =====
 
-Deskargatu:
+'dependencies' karpetan topatu dezakezu:
 
-        $ wget https://foma.googlecode.com/files/foma-0.9.17.tar.gz
-        edo bestela gure webgunetik:
-        $ wget http://ixa2.si.ehu.es/eustagger/foma-0.9.17.tar.gz
+        $ cd dependencies
+	edo bestela githubetik hartu:
+        $ wget https://github.com/mhulden/foma/archive/master.zip
+	$ mv master.zip foma-0.9.18.zip
+        edo bestela IXAko webgunetik deskargatu:
+        $ wget http://ixa2.si.ehu.es/eustagger/foma-0.9.18.tar.gz
 
 
 Deskonprimitu, konpilatu eta instalatu:
 
-        $ tar -zxvf foma-0.9.17.tar.gz
-        $ cd foma-0.9.17
+        $ unzip foma-0.9.18.zip (or tar -zxvf foma-0.9.18.tar.gz if you took it from the web)
+        $ cd foma-0.9.18
         $ make
         $ make install
 
 (lehenetsitako instalazio prefix-a /usr/local da, aldatzeko editatu Makefile fitxategia)
+
+ARAZOAK 1:
+foma konpilatzean (make komandoa exekutatzean) errorea ematen badu libreadline ez duela topatzen esanez:
+
+/usr/bin/ld: cannot find -lreadline
+/usr/bin/ld: cannot find -ltermcap
+collect2: error: ld returned 1 exit status
+Makefile:68: recipe for target 'libfoma.so.0.9.17' failed
+make: *** [libfoma.so.0.9.17] Error 1
+
+Liburutegia instalatu behar da. Ubuntun (16.04) adibidez:
+
+       apt-get install libreadline-dev
+
 
 vislcg3:
 ========
@@ -188,7 +205,10 @@ Konpilatu eta instalatzeko (goiko dependentziak ):
 	Sistema eragileko swipl erabiltzen bada seguraski swipl-ren fitxategiak
 	non dauden adierazi behar zaio 	"--with-swipl-include="  eta "--with-lib-include="
 	parametroak erabiliz. Adibidez Ubuntun "--with-swipl-include=/usr/lib/swi-prolog/include"
-	gehitu behar da...
+	gehitu behar da... 
+	   adibidez, hurrengo agindua erabiliko genuke, suposatus swi-prolog /usr/local/swipl-6.6.6 karpetan instalatu dugula
+	   eta vislcg3 /usr/local/vislcg3 karpetan instalatu dugula. Aginduak eustagger /usr/local/eustagger karpetan instalatzeko esaten du gainera --prefix erabilita.
+	   $ ./configure --with-swipl-include=/usr/local/swipl-6.6.6/lib/swipl-6.6.6/include/ --with-swipl-lib=/usr/local/swipl-6.6.6/lib/swipl-6.6.6/lib/i686-linux/ --with-swipl-bin=/usr/local/swipl-6.6.6/bin/ --with-vislcg3-include=/usr/local/vislcg3/lib/include --with-vislcg3-lib=/usr/local/vislcg3/lib/ --prefix=/usr/local/eustagger
 	
 	$ make
 	$ make install
