@@ -25,6 +25,13 @@ Ubuntu:
           autoconf bison flex zlib1g zlib1g-dev libpcre3 libpcre3-dev\
           libpcre++0 libpcre++-dev libboost-all-dev
 
+	Ubuntu 16.04 bertsioan:
+
+	$ apt-get install subversion make cmake cpp libicu55 libicu-dev\
+	  autoconf bison flex zlib1g zlib1g-dev libpcre3 libpcre3-dev\ 
+	  libpcre++0v5 libpcre++-dev libboost-all-dev
+
+
 Fedora:
 =======
 
@@ -37,7 +44,7 @@ Fedoran pcre++ eskuz instalatu behar da. Horretarako
 
         $ wget http://www.daemon.de/idisk/Apps/pcre++/pcre++-0.9.5.tar.gz
         edo bestela gure webgunetik:
-        $ wget http://ixa2.si.ehu.es/eustagger/pcre++-0.9.5.tar.gz
+        $ wget http://ixa2.si.ehu.es/eustagger/download/pcre++-0.9.5.tar.gz 
 
 
         Deskonprimitu eta nahi duzun prefix-ean instalatu:
@@ -63,7 +70,7 @@ foma:
         $ wget https://github.com/mhulden/foma/archive/master.zip
 	$ mv master.zip foma-0.9.18.zip
         edo bestela IXAko webgunetik deskargatu:
-        $ wget http://ixa2.si.ehu.es/eustagger/foma-0.9.18.tar.gz
+        $ wget http://ixa2.si.ehu.es/eustagger/download/foma-0.9.17.tar.gz
 
 
 Deskonprimitu, konpilatu eta instalatu:
@@ -96,7 +103,7 @@ Deskargatu:
 
         $ wget http://beta.visl.sdu.dk/download/vislcg3/vislcg3-20130826.tar.gz
         edo bestela gure webgunetik:
-        $ wget http://ixa2.si.ehu.es/eustagger/vislcg3-20130826.tar.gz
+        $ wget http://ixa2.si.ehu.es/eustagger/download/vislcg3-20130826.tar.gz
 
 Deskonprimitu, konpilatu eta instalatu (cmake erabiltzen da):
 
@@ -126,7 +133,7 @@ Programa Freeling 3.1rekin probatu dugu (3.0 bertsioak ez du balio).
 http://devel.cpl.upc.edu/freeling/downloads/32 helbidetik deskargatu freeling-3.1.tar.gz
 paketea. Edo bestela gure webgunetik deskargatu:
 
-         $ wget http://ixa2.si.ehu.es/eustagger/freeling-3.1.tar.gz
+         $ wget http://ixa2.si.ehu.es/eustagger/download/freeling-3.1.tar.gz
 
 
 Deskonprimitu, konpilatu eta instalatu:
@@ -192,9 +199,7 @@ eustagger:
 
 Eskuratu eustagger:
 
-        $ svn co https://siuc05.si.ehu.es/svn/eustagger/trunk/eustagger
-        edo bestela:
-        $ wget http://ixa2.si.ehu.es/eustagger/eustagger_latest.tar.bz2
+        $ wget https://github.com/ixa-ehu/eustagger-lite/archive/master.zip
 
 Konpilatu eta instalatzeko (goiko dependentziak ):
 
@@ -255,4 +260,45 @@ Arazo hau ematen badu, vislcg3-k erabiltzen duen libtcmalloc.so liburutegian dag
 ARAZOAK 2:
 -----------
 Eustagger exekutatzean liburutegiak ez baditu topatzen (libcg3.so edo libeustagger.so) esteka sinbolikoak sortu behar dira. Hau gerta daiteke vislcg3 eta eustagger /usr/local ez den beste direktorio batean instalatu direnean.
+
+ARAZOAK 3:
+-----------
+Eustagger, 64 bitetako Ubuntu 16.04 bertsioan egikaritzerakoan jarraian azaltzen den errorea ematen badu: 
+
+
+//libeustagger.so: undefined reference to `pcrepp::Pcre::split(std::string const&)'
+.//libeustagger.so: undefined reference to `u_fgetc_48'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::search(std::string const&, int)'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::search(std::string const&)'
+.//libeustagger.so: undefined reference to `ucnv_setDefaultName_48'
+.//libeustagger.so: undefined reference to `u_fclose_48'
+.//libeustagger.so: undefined reference to `freeling::word::set_form(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&)'
+.//libeustagger.so: undefined reference to `u_cleanup_48'
+.//libeustagger.so: undefined reference to `uloc_getDefault_48'
+.//libeustagger.so: undefined reference to `u_fgetfile_48'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::Pcre(std::string const&, std::string const&)'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::replace(std::string const&, std::string const&)'
+.//libeustagger.so: undefined reference to `freeling::word::get_form() const'
+.//libeustagger.so: undefined reference to `ucnv_getDefaultName_48'
+.//libeustagger.so: undefined reference to `freeling::word::word(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&)'
+.//libeustagger.so: undefined reference to `u_errorName_48'
+.//libeustagger.so: undefined reference to `uloc_setDefault_48'
+.//libeustagger.so: undefined reference to `freeling::analysis::get_tag() const'
+.//libeustagger.so: undefined reference to `CG3::cbuffers'
+.//libeustagger.so: undefined reference to `freeling::analysis::analysis(std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&, std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&)'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::Pcre(std::string const&)'
+.//libeustagger.so: undefined reference to `u_fgets_48'
+.//libeustagger.so: undefined reference to `freeling::analysis::get_lemma() const'
+.//libeustagger.so: undefined reference to `u_fopen_48'
+.//libeustagger.so: undefined reference to `u_feof_48'
+.//libeustagger.so: undefined reference to `pcrepp::Pcre::get_match(int) const'
+.//libeustagger.so: undefined reference to `u_finit_48'
+.//libeustagger.so: undefined reference to `u_init_48'
+collect2: error: ld returned 1 exit status
+
+LD_LIBRARY_PATH ingurune aldagaian honakoa gehitu behar da:
+
+
+	export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
 
